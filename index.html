@@ -3,9 +3,536 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5 lakh </title>
+    <title>Sahara — Immersive AI Experience</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Space+Grotesk:wght@500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css?family=Roboto+Mono:100');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+        }
+
+        /* WebGL Canvas Background */
+        canvas#webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            z-index: 1;
+        }
+
+        /* UI Overlay Container */
+        .ui-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2.5rem 5rem;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        /* Navigation Bar */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            pointer-events: auto;
+        }
+
+        .logo {
+            height: 34px;
+            width: auto;
+            object-fit: contain;
+            /* Inverts the colors of the image file */
+            filter: invert(1); 
+            
+            /* NOTE: If the inversion doesn't make it perfectly red and white based on your 
+               original image, you can replace the filter above with this one below:
+               filter: brightness(0) invert(1) sepia(1) saturate(10000%) hue-rotate(345deg); 
+            */
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ff3333;
+        }
+
+        .nav-cta {
+            background: rgba(255, 51, 51, 0.1);
+            border: 1px solid rgba(255, 51, 51, 0.4);
+            color: #fff;
+            padding: 0.6rem 1.4rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-cta:hover {
+            background: #ff3333;
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.6);
+        }
+
+        /* Hero Content Section - Perfectly Centered */
+        .hero {
+            max-width: 850px;
+            margin: auto;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.8rem, 5.5vw, 5.5rem);
+            line-height: 1.05;
+            font-weight: 700;
+            width: 112%;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 .highlight {
+            color: #ff3333;
+            text-shadow: 0 0 30px rgba(255, 51, 51, 0.4);
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 1.2vw, 1.15rem);
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.6;
+            max-width: 580px;
+            margin: 0 auto 2.5rem auto;
+            font-weight: 300;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1.2rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: #fff;
+            color: #000;
+            padding: 0.9rem 2rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #ff3333;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 51, 51, 0.4);
+        }
+
+        .btn-secondary {
+            color: #fff;
+            background: transparent;
+            padding: 0.9rem 1.5rem;
+            font-weight: 500;
+            font-size: 0.95rem;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Scramble text dud styling */
+        .dud {
+            color: rgba(255, 255, 255, 0.35); /* Using semi-transparent white for smoother blending */
+            font-weight: 300;
+        }
+
+        /* Responsive Breakpoints */
+        @media(max-width: 768px) {
+            .ui-container {
+                padding: 1.5rem 1.2rem;
+            }
+            .nav-links {
+                display: none;
+            }
+            .nav-cta {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+
+            .hero h1{
+                width: 100%
+            }
+            .hero p {
+                font-size: 0.95rem;
+            }
+            .hero-actions {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.8rem; 
+            }
+            .btn-primary, .btn-secondary {
+                width: 80%;
+                padding: 0.8rem 1rem; 
+                font-size: 0.85rem; 
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-    this is test 
+
+    <!-- WebGL Background Container -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- UI Layer -->
+    <div class="ui-container">
+        <nav>
+            <img src="logo.png" alt="Sahara.ai Logo" class="logo">
+            <a href="audit.html">
+<button  class="nav-cta"> Audit</button>
+            </a>
+        </nav>
+
+        <main class="hero">
+            <h1>
+                <!-- The scramble class is strictly isolated to the hero h1 now -->
+                
+
+                <span class="scramble">We find where revenue is</span> 
+                <span class="highlight scramble">being lost.</span> 
+                <span class="scramble">We build systems to fix the leak.</span>
+            </h1>
+            <p>We find the gaps between attention, action and revenue — then build the systems that fix them.</p>
+            <div class="hero-actions">
+                <a href="audit.html" class="btn-primary">Free Audit</a>
+                <a href="https://www.linkedin.com/company/rawsahara-tech/" class="btn-secondary">Contact Us</a>
+            </div>
+        </main>
+
+        <!-- Empty spacer to ensure perfect vertical balance for centered hero -->
+        <div style="height: 20px;"></div>
+    </div>
+
+<script>
+    // ——————————————————————————————————————————————————
+    // User's Provided TextScramble (Modified for L-to-R)
+    // ——————————————————————————————————————————————————
+    class TextScramble {
+        constructor(el) {
+            this.el = el;
+            this.chars = '!<>-_\\/[]{}—=+*^?#________';
+            this.update = this.update.bind(this);
+        }
+        
+        setText(newText) {
+            const oldText = ''; // Start from blank
+            const length = newText.length;
+            const promise = new Promise((resolve) => this.resolve = resolve);
+            this.queue = [];
+            
+            for (let i = 0; i < length; i++) {
+                const from = this.randomChar();
+                const to = newText[i] || '';
+                
+                // LEFT-TO-RIGHT LOGIC:
+                // We use the character index (i) to delay the start and end of the scramble.
+                // Characters closer to the end of the word start decoding later.
+                const start = Math.floor(i * 3); 
+                const end = start + 12 + Math.floor(Math.random() * 8);
+                
+                this.queue.push({ from, to, start, end });
+            }
+            
+            cancelAnimationFrame(this.frameRequest);
+            this.frame = 0;
+            this.update();
+            return promise;
+        }
+        
+        update() {
+            let output = '';
+            let complete = 0;
+            
+            for (let i = 0, n = this.queue.length; i < n; i++) {
+                let { from, to, start, end, char } = this.queue[i];
+                if (this.frame >= end) {
+                    complete++;
+                    output += to;
+                } else if (this.frame >= start) {
+                    if (!char || Math.random() < 0.28) {
+                        char = this.randomChar();
+                        this.queue[i].char = char;
+                    }
+                    output += `<span class="dud">${char}</span>`;
+                } else {
+                    output += `<span class="dud">${from}</span>`;
+                }
+            }
+            
+            this.el.innerHTML = output;
+            
+            if (complete === this.queue.length) {
+                this.resolve();
+            } else {
+                this.frameRequest = requestAnimationFrame(this.update);
+                this.frame++;
+            }
+        }
+        
+        randomChar() {
+            return this.chars[Math.floor(Math.random() * this.chars.length)];
+        }
+    }
+
+    // Initialize animation on DOM load
+    document.addEventListener('DOMContentLoaded', () => {
+        const elements = document.querySelectorAll('.scramble');
+        
+        elements.forEach((el, index) => {
+            const finalString = el.innerText;
+            el.innerText = ''; // Clear out the text instantly on load
+            const fx = new TextScramble(el);
+            
+            // Stagger the activation of each line
+            setTimeout(() => {
+                fx.setText(finalString);
+            }, 100 + (index * 350)); 
+        });
+    });
+
+    // ——————————————————————————————————————————————————
+    // WEBGL BACKGROUND SYSTEM (Unchanged & Perfected)
+    // ——————————————————————————————————————————————————
+    const dpr = Math.min(window.devicePixelRatio, 2);
+    
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const canvasElement = document.getElementById('webgl-canvas');
+    const renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true });
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(dpr);
+
+    function createCharactersTexture(characters, fontSize = 54) {
+        const canvas = document.createElement("canvas");
+        const SIZE = 1024;
+        const MAX_PER_ROW = 16;
+        const CELL = SIZE / MAX_PER_ROW;
+
+        canvas.width = canvas.height = SIZE;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, SIZE, SIZE);
+        ctx.font = `bold ${fontSize}px monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#ffffff";
+
+        for (let i = 0; i < characters.length; i++) {
+            const x = i % MAX_PER_ROW;
+            const y = Math.floor(i / MAX_PER_ROW);
+            ctx.fillText(characters[i], x * CELL + CELL / 2, y * CELL + CELL / 2);
+        }
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        return texture;
+    }
+    
+    const charactersTexture = createCharactersTexture("+*2=t.:,-#", 54);
+
+    const textureLoader = new THREE.TextureLoader();
+    const getHeroImagePath = () => (window.innerWidth < 768 ? 'hero-mobile.png' : 'hero-desktop.png');
+    let currentImageSrc = getHeroImagePath();
+    let bgTexture = textureLoader.load(currentImageSrc);
+
+    const trailCanvas = document.createElement('canvas');
+    trailCanvas.width = window.innerWidth * dpr;
+    trailCanvas.height = window.innerHeight * dpr;
+    const trailCtx = trailCanvas.getContext('2d');
+    trailCtx.fillStyle = 'black';
+    trailCtx.fillRect(0, 0, trailCanvas.width, trailCanvas.height);
+    const trailTexture = new THREE.CanvasTexture(trailCanvas);
+
+    const uniforms = {
+        uImage: { value: bgTexture },
+        uCharacters: { value: charactersTexture },
+        uTrail: { value: trailTexture },
+        uCharactersCount: { value: 10.0 },
+        uCellSize: { value: 8.0 }, 
+        uResolution: { value: new THREE.Vector2(window.innerWidth * dpr, window.innerHeight * dpr) },
+        uTime: { value: 0 }
+    };
+
+    const vertexShader = `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = vec4(position, 1.0);
+        }
+    `;
+
+    const fragmentShader = `
+        uniform sampler2D uImage;
+        uniform sampler2D uCharacters;
+        uniform sampler2D uTrail;
+        uniform float uCharactersCount;
+        uniform float uCellSize;
+        uniform vec2 uResolution;
+        uniform float uTime;
+
+        varying vec2 vUv;
+        const vec2 SIZE = vec2(16.0);
+
+        void main() {
+            vec2 cell = uResolution / uCellSize;
+            vec2 grid = 1.0 / cell;
+            vec2 pixelizedUV = grid * (0.5 + floor(vUv / grid));
+
+            vec4 imgColor = texture2D(uImage, pixelizedUV);
+
+            if (length(imgColor.rgb) < 0.01) {
+                imgColor.rgb = vec3(0.8, 0.1, 0.1); 
+            }
+
+            float spotlight = texture2D(uTrail, vUv).r;
+
+            float brightness = dot(imgColor.rgb, vec3(0.299, 0.587, 0.114));
+            float noise = sin(dot(pixelizedUV, vec2(12.9898, 78.233)) + uTime * 4.0) * 0.15;
+            float finalBrightness = clamp(brightness + (noise * spotlight), 0.0, 1.0);
+
+            float charIndex = floor((uCharactersCount - 1.0) * finalBrightness);
+            vec2 charPos = vec2(mod(charIndex, SIZE.x), floor(charIndex / SIZE.y));
+            vec2 offset = vec2(charPos.x, -charPos.y) / SIZE;
+            vec2 charUV = mod(vUv * (cell / SIZE), 1.0 / SIZE) - vec2(0.0, 1.0 / SIZE) + offset;
+            vec4 asciiChar = texture2D(uCharacters, charUV);
+
+            vec3 finalColor = imgColor.rgb * max(asciiChar.r, 0.35) * (0.9 + spotlight * 3.5);
+            
+            gl_FragColor = vec4(finalColor, 1.0);
+        }
+    `;
+
+    const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
+
+    let mouse = { x: -1000, y: -1000 };
+    let prevMouse = { x: -1000, y: -1000 };
+
+    window.addEventListener('mousemove', (e) => {
+        const rect = canvasElement.getBoundingClientRect();
+        const mappedX = (e.clientX - rect.left) * dpr;
+        const mappedY = (e.clientY - rect.top) * dpr;
+
+        if (mouse.x === -1000) {
+            prevMouse.x = mappedX;
+            prevMouse.y = mappedY;
+        }
+        mouse.x = mappedX;
+        mouse.y = mappedY;
+    });
+
+    window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        uniforms.uResolution.value.set(window.innerWidth * dpr, window.innerHeight * dpr);
+        
+        trailCanvas.width = window.innerWidth * dpr;
+        trailCanvas.height = window.innerHeight * dpr;
+        
+        trailCtx.fillStyle = 'black';
+        trailCtx.fillRect(0, 0, trailCanvas.width, trailCanvas.height);
+
+        const newImageSrc = getHeroImagePath();
+        if (newImageSrc !== currentImageSrc) {
+            currentImageSrc = newImageSrc;
+            uniforms.uImage.value = textureLoader.load(currentImageSrc);
+        }
+    });
+
+    const clock = new THREE.Clock();
+
+    function drawTrail() {
+        trailCtx.fillStyle = 'rgba(0, 0, 0, 0.08)'; 
+        trailCtx.fillRect(0, 0, trailCanvas.width, trailCanvas.height);
+
+        if (mouse.x !== -1000) {
+            trailCtx.lineCap = 'round';
+            trailCtx.lineJoin = 'round';
+            trailCtx.lineWidth = 90 * dpr; 
+            trailCtx.strokeStyle = 'white';
+            
+            trailCtx.shadowBlur = 35 * dpr;
+            trailCtx.shadowColor = 'white';
+
+            trailCtx.beginPath();
+            trailCtx.moveTo(prevMouse.x, prevMouse.y);
+            trailCtx.lineTo(mouse.x, mouse.y);
+            trailCtx.stroke();
+            
+            trailCtx.shadowBlur = 0; 
+        }
+
+        prevMouse.x += (mouse.x - prevMouse.x) * 0.6;
+        prevMouse.y += (mouse.y - prevMouse.y) * 0.6;
+
+        trailTexture.needsUpdate = true;
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        uniforms.uTime.value = clock.getElapsedTime();
+        
+        drawTrail(); 
+        renderer.render(scene, camera); 
+    }
+    
+    animate();
+</script>
+
 </body>
 </html>

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue Audit — Sahara.ai</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --surface-color: #0d0d0d;
+            --surface-hover: #161616;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --accent: #ff3333;
+            --accent-glow: rgba(255, 51, 51, 0.15);
+            --text-main: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.55);
+            --font-heading: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Layout Architecture --- */
+        .split-layout {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .left-panel {
+            flex: 0 0 35%;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--border-color);
+            background: linear-gradient(180deg, rgba(10,10,10,0) 0%, rgba(20,0,0,0.05) 100%);
+            position: relative;
+            z-index: 10;
+        }
+
+        .right-panel {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 4rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* --- Left Panel Branding --- */
+        .logo {
+            height: 24px;
+            width: auto;
+            object-fit: contain;
+            filter: invert(1);
+        }
+
+        .context-block {
+            max-width: 400px;
+        }
+
+        .label {
+            display: inline-flex;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .label::before {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .context-block h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(2.5rem, 3vw, 3.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.03em;
+        }
+
+        .context-block p {
+            font-size: 1.05rem;
+            line-height: 1.6;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        .footer-legal {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        /* --- Right Panel UI --- */
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 4rem;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            opacity: 1;
+            transition: opacity var(--transition);
+        }
+
+        .progress-text {
+            font-family: var(--font-heading);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .progress-track {
+            width: 150px;
+            height: 2px;
+            background: var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            transition: width 0.6s cubic-bezier(0.87, 0, 0.13, 1);
+        }
+
+        /* --- Form & Steps --- */
+        #audit-form {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(40px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .step.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0);
+            position: relative;
+        }
+
+        .step.exit-up {
+            transform: translateY(-40px);
+            opacity: 0;
+        }
+
+        .step.exit-down {
+            transform: translateY(40px);
+            opacity: 0;
+        }
+
+        .question-title {
+            font-family: var(--font-heading);
+            font-size: clamp(1.8rem, 2.5vw, 2.5rem);
+            font-weight: 500;
+            line-height: 1.2;
+            margin-bottom: 3rem;
+            letter-spacing: -0.02em;
+        }
+
+        /* --- Custom Radio Cards --- */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .option-card {
+            display: block;
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .option-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .card-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem 1.8rem;
+            border-radius: 6px;
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .card-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover .card-content {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            color: var(--text-main);
+            transform: translateY(-2px);
+        }
+
+        .option-card input:checked ~ .card-content {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--text-main);
+            box-shadow: 0 8px 30px rgba(255, 51, 51, 0.1);
+        }
+
+        .option-card input:checked ~ .card-content .card-indicator {
+            border-color: var(--accent);
+            background: var(--accent);
+            box-shadow: inset 0 0 0 4px var(--accent-glow);
+        }
+
+        .option-card input:focus-visible ~ .card-content {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
+        /* --- Lead Capture & Success Screen --- */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .input-group input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.8rem 0;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            font-family: var(--font-body);
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-bottom-color: var(--accent);
+        }
+
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            margin-top: 0.25rem;
+            accent-color: var(--accent);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .checkbox-group span {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .btn-submit {
+            background: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            padding: 1.2rem 2.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: var(--font-heading);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 3rem;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-submit:hover {
+            background: var(--accent);
+            color: var(--text-main);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 51, 51, 0.4);
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(255, 51, 51, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        /* --- Navigation Controls --- */
+        .controls {
+            margin-top: 4rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .btn-back.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-back:hover {
+            color: var(--text-main);
+        }
+
+        /* Responsive Breakpoints */
+        @media(max-width: 992px) {
+            .split-layout {
+                flex-direction: column;
+                height: auto;
+                overflow-y: auto;
+            }
+            body, html { overflow: auto; height: auto; }
+            .left-panel {
+                flex: none;
+                padding: 2rem;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                min-height: auto;
+            }
+            .context-block h1 {
+                font-size: 2rem;
+            }
+            .right-panel {
+                padding: 2rem;
+                overflow: visible;
+            }
+            .top-bar {
+                margin-bottom: 2rem;
+                justify-content: space-between;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="split-layout">
+        
+        <!-- Fixed Branding & Context Panel -->
+        <aside class="left-panel">
+            <a href="index.html">
+                <img src="logo.png" alt="Sahara.ai" class="logo">
+            </a>
+            
+            <div class="context-block" style="margin-top: 50px;">
+          
+                <h1>Where is your revenue leaking?</h1>
+                <p>Answer a few questions. We’ll identify where opportunities may be getting lost and what could be fixed.</p>
+            </div>
+           
+        </aside>
+
+        <!-- Dynamic Assessment Panel -->
+        <main class="right-panel">
+            <div class="top-bar">
+                <div class="mobile-spacer"></div> 
+                <div class="progress-container" id="progress-container">
+                    <span class="progress-text" id="progress-text">01 / 08</span>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formspree Endpoint Integrated Here -->
+            <form id="audit-form" action="https://formspree.io/f/xzepkgvp" method="POST">
+                
+                <!-- Step 1 -->
+                <div class="step active" data-step="1">
+                    <h2 class="question-title">What best describes your business?</h2>
+                    <div class="options-grid">
+                        <label class="option-card">
+                            <input type="radio" name="Business Type" value="B2B SaaS">
+                            <div class="card-content"><span>B2B SaaS</span><div class="card-indicator"></div></div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="Business Type" value="Ecommerce">
+                            <div class="card-content"><span>Ecommerce</span><div class="card-indicator"></div></div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="Business Type" value="High-ticket services">
+                            <div class="card-content"><span>High-ticket services</span><div class="card-indicator"></div></div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="Business Type" value="Agency / Consulting">
+                            <div class="card-content"><span>Agency / Consulting</span><div class="card-indicator"></div></div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="Business Type" value="Local / Offline business">
+                            <div class="card-content"><span>Local / Offline business</span><div class="card-indicator"></div></div>
+                        </label>
+                        <label class="option-card">
+                            <input type="radio" name="Business Type" value="Other">
+                            <div class="card-content"><span>Other</span><div class="card-indicator"></div></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="step" data-step="2">
+                    <h2 class="question-title">How do most new customers reach you today?</h2>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="Acquisition Channel" value="Website"><div class="card-content"><span>Website</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Acquisition Channel" value="Paid ads"><div class="card-content"><span>Paid ads</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Acquisition Channel" value="LinkedIn / Social"><div class="card-content"><span>LinkedIn / Social</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Acquisition Channel" value="Referrals"><div class="card-content"><span>Referrals</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Acquisition Channel" value="Phone calls"><div class="card-content"><span>Phone calls</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Acquisition Channel" value="WhatsApp / Email"><div class="card-content"><span>WhatsApp / Email</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Acquisition Channel" value="Multiple channels"><div class="card-content"><span>Multiple channels</span><div class="card-indicator"></div></div></label>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="step" data-step="3">
+                    <h2 class="question-title">What happens when a new lead comes in?</h2>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="Lead Process" value="A person handles it manually"><div class="card-content"><span>A person handles it manually</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lead Process" value="We have some automation"><div class="card-content"><span>We have some automation</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lead Process" value="Mostly automated"><div class="card-content"><span>Mostly automated</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lead Process" value="Honestly, it depends"><div class="card-content"><span>Honestly, it depends</span><div class="card-indicator"></div></div></label>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="step" data-step="4">
+                    <h2 class="question-title">Where do you feel the biggest opportunity is being lost?</h2>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="Lost Opportunity" value="Getting enough leads"><div class="card-content"><span>Getting enough leads</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lost Opportunity" value="Responding fast enough"><div class="card-content"><span>Responding fast enough</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lost Opportunity" value="Following up"><div class="card-content"><span>Following up</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lost Opportunity" value="Converting leads into customers"><div class="card-content"><span>Converting leads into customers</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lost Opportunity" value="Upselling / repeat business"><div class="card-content"><span>Upselling / repeat business</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Lost Opportunity" value="I’m not sure yet"><div class="card-content"><span>I’m not sure yet</span><div class="card-indicator"></div></div></label>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="step" data-step="5">
+                    <h2 class="question-title">How quickly does a new enquiry usually get a response?</h2>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="Response Time" value="Under 5 minutes"><div class="card-content"><span>Under 5 minutes</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Response Time" value="Under 30 minutes"><div class="card-content"><span>Under 30 minutes</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Response Time" value="Within a few hours"><div class="card-content"><span>Within a few hours</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Response Time" value="Same day"><div class="card-content"><span>Same day</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Response Time" value="Next day or later"><div class="card-content"><span>Next day or later</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Response Time" value="It varies"><div class="card-content"><span>It varies</span><div class="card-indicator"></div></div></label>
+                    </div>
+                </div>
+
+                <!-- Step 6 -->
+                <div class="step" data-step="6">
+                    <h2 class="question-title">What happens to leads that don’t buy immediately?</h2>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="Nurture Process" value="Structured follow-up"><div class="card-content"><span>Structured follow-up</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Nurture Process" value="Occasional manual follow-up"><div class="card-content"><span>Occasional manual follow-up</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Nurture Process" value="Email / WhatsApp sequence"><div class="card-content"><span>Email / WhatsApp sequence</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Nurture Process" value="Nothing consistent"><div class="card-content"><span>Nothing consistent</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Nurture Process" value="We don’t really track this"><div class="card-content"><span>We don’t really track this</span><div class="card-indicator"></div></div></label>
+                    </div>
+                </div>
+
+                <!-- Step 7 -->
+                <div class="step" data-step="7">
+                    <h2 class="question-title">How much of your sales process is still manual?</h2>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="Manual Workload" value="Almost everything"><div class="card-content"><span>Almost everything</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Manual Workload" value="More than half"><div class="card-content"><span>More than half</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Manual Workload" value="About half"><div class="card-content"><span>About half</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Manual Workload" value="Mostly automated"><div class="card-content"><span>Mostly automated</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Manual Workload" value="Almost fully automated"><div class="card-content"><span>Almost fully automated</span><div class="card-indicator"></div></div></label>
+                    </div>
+                </div>
+
+                <!-- Step 8 -->
+                <div class="step" data-step="8">
+                    <h2 class="question-title">If we could fix one thing in your revenue process this month, what would matter most?</h2>
+                    <div class="options-grid">
+                        <label class="option-card"><input type="radio" name="Primary Goal" value="More qualified leads"><div class="card-content"><span>More qualified leads</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Primary Goal" value="Faster response"><div class="card-content"><span>Faster response</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Primary Goal" value="Better follow-up"><div class="card-content"><span>Better follow-up</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Primary Goal" value="Higher conversion rate"><div class="card-content"><span>Higher conversion rate</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Primary Goal" value="More repeat customers"><div class="card-content"><span>More repeat customers</span><div class="card-indicator"></div></div></label>
+                        <label class="option-card"><input type="radio" name="Primary Goal" value="Less manual work"><div class="card-content"><span>Less manual work</span><div class="card-indicator"></div></div></label>
+                    </div>
+                </div>
+
+                <!-- Step 9: Lead Capture -->
+                <div class="step" data-step="9">
+                    <h2 class="question-title">Where should we send your audit?</h2>
+                    
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="Name" required placeholder="John Doe">
+                        </div>
+                        <div class="input-group">
+                            <label for="email">Work Email</label>
+                            <input type="email" id="email" name="Email" required placeholder="john@company.com">
+                        </div>
+                        <div class="input-group">
+                            <label for="company">Company</label>
+                            <input type="text" id="company" name="Company" required placeholder="Acme Corp">
+                        </div>
+                        <div class="input-group">
+                            <label for="website">Website</label>
+                            <input type="text" id="website" name="Website" required placeholder="https://">
+                        </div>
+                        <div class="input-group full-width">
+                            <label for="phone">Phone / WhatsApp (Optional)</label>
+                            <input type="tel" id="phone" name="Phone" placeholder="+1 (555) 000-0000">
+                        </div>
+                    </div>
+
+                    <label class="checkbox-group">
+                        <input type="checkbox" name="Consent" value="Yes" required>
+                        <span>I’m happy to receive the audit and relevant recommendations.</span>
+                    </label>
+
+                    <button type="submit" class="btn-submit">
+                        GET MY REVENUE AUDIT
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                </div>
+
+                <!-- Step 10: Success Screen -->
+                <div class="step" data-step="10">
+                    <div class="success-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </div>
+                    <h2 class="question-title" style="margin-bottom: 1rem;">Your audit is in.</h2>
+                    <p style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.6; max-width: 500px;">
+                        We’ll review your answers and look for the biggest opportunities to recover, automate or increase revenue.
+                        <br><br>
+                        <strong style="color: var(--text-main); font-weight: 500;">No generic sales pitch. We’ll show you what we actually found.</strong>
+                    </p>
+                </div>
+
+            </form>
+
+            <div class="controls">
+                <button class="btn-back" id="btn-back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Back
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const steps = document.querySelectorAll('.step');
+            const radios = document.querySelectorAll('input[type="radio"]');
+            const btnBack = document.getElementById('btn-back');
+            const form = document.getElementById('audit-form');
+            const progressContainer = document.getElementById('progress-container');
+            const progressText = document.getElementById('progress-text');
+            const progressFill = document.getElementById('progress-fill');
+            
+            let currentStep = 1;
+            const totalQuestions = 8; 
+
+            updateProgress();
+
+            radios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    if (currentStep <= totalQuestions) {
+                        setTimeout(() => {
+                            goToStep(currentStep + 1);
+                        }, 400);
+                    }
+                });
+            });
+
+            btnBack.addEventListener('click', () => {
+                if (currentStep > 1 && currentStep <= 9) {
+                    goToStep(currentStep - 1, true);
+                }
+            });
+
+            function goToStep(newStep, isBackwards = false) {
+                const currentEl = document.querySelector(`.step[data-step="${currentStep}"]`);
+                const newEl = document.querySelector(`.step[data-step="${newStep}"]`);
+
+                if (!newEl) return;
+
+                currentEl.classList.remove('active');
+                if (isBackwards) {
+                    currentEl.classList.add('exit-down');
+                    currentEl.classList.remove('exit-up');
+                } else {
+                    currentEl.classList.add('exit-up');
+                    currentEl.classList.remove('exit-down');
+                }
+
+                newEl.classList.remove('exit-up', 'exit-down');
+                
+                setTimeout(() => {
+                    newEl.classList.add('active');
+                }, 50);
+
+                currentStep = newStep;
+                updateUI();
+            }
+
+            function updateUI() {
+                if (currentStep > 1 && currentStep < 10) {
+                    btnBack.classList.add('visible');
+                } else {
+                    btnBack.classList.remove('visible');
+                }
+                updateProgress();
+            }
+
+            function updateProgress() {
+                if (currentStep <= totalQuestions) {
+                    progressContainer.style.opacity = '1';
+                    progressText.innerText = `0${currentStep} / 08`;
+                    const percentage = (currentStep / totalQuestions) * 100;
+                    progressFill.style.width = `${percentage}%`;
+                } else {
+                    progressContainer.style.opacity = '0';
+                    progressContainer.style.pointerEvents = 'none';
+                }
+            }
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const submitBtn = form.querySelector('.btn-submit');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = 'PROCESSING...';
+                submitBtn.style.pointerEvents = 'none';
+
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        goToStep(10); 
+                        btnBack.classList.remove('visible'); 
+                    } else {
+                        alert("There was a problem submitting your audit. Please try again.");
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.style.pointerEvents = 'auto';
+                    }
+                }).catch(error => {
+                    alert("There was a network error. Please try again.");
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.style.pointerEvents = 'auto';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
