@@ -13,7 +13,7 @@ export const SiteFooter: FC = (): ReactNode => {
             <Container className='pt-20 pb-16 md:pt-28 md:pb-24'>
                 <div className='grid gap-12 lg:grid-cols-12 lg:gap-8'>
                     <div className='lg:col-span-5'>
-                        <Link href='/#top' aria-label='SAHARA LABS, back to top'>
+                        <Link href='/#top' aria-label='Sahara Labs, back to top'>
                             <LogoLockup className='h-14 md:h-16' />
                         </Link>
                         <p className='mt-8 max-w-sm text-[15px] leading-relaxed text-muted-foreground'>
@@ -69,22 +69,11 @@ export const SiteFooter: FC = (): ReactNode => {
                     </div>
                 </div>
 
-            </Container>
-
-            {/* Giant Sahara Labs Micro-Pixel Interactive Game Footer - Full Viewport Width */}
-            <div className='w-full border-t border-line bg-white'>
-                <div className='relative h-[550px] sm:h-[650px] md:h-[750px] lg:h-[840px] w-full overflow-hidden'>
-                    <PixelGame />
-                </div>
-            </div>
-
-            <Container>
-                <div className='flex flex-col gap-3 border-t border-line py-6 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground md:flex-row md:items-center md:justify-between'>
-                    <p>© 2026 SAHARA LABS</p>
-                    <p>Lead generation × Automation × AI voice</p>
-                    <Link href='/#top' className='inline-flex items-center gap-2 transition-colors hover:text-ink'>
-                        Back to top ↑
-                    </Link>
+                {/* Sahara Labs Micro-Pixel Interactive Game Footer */}
+                <div className='mt-20 border-t border-line pt-12 md:mt-28 md:pt-16'>
+                    <div className='relative h-[340px] sm:h-[420px] md:h-[500px] lg:h-[560px] w-full overflow-hidden border border-line bg-white'>
+                        <PixelGame />
+                    </div>
                 </div>
             </Container>
         </footer>
