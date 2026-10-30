@@ -28,6 +28,6 @@ export const LogoLockup: FC<LogoProps> = ({ className }): ReactNode => (
 export const Logo: FC<LogoProps> = ({ className }): ReactNode => (
     <span className={cn('inline-flex items-center gap-2.5 text-ink', className)}>
         <LogoMark className='h-9' />
-        <span className='text-[15px] font-semibold uppercase leading-none tracking-[0.18em]'>SAHARA LABS</span>
+        <span className='text-[15px] font-bold leading-none'>Sahara Labs</span>
     </span>
 )

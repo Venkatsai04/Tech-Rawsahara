@@ -1,5 +1,5 @@
 export const siteConfig = {
-    name: 'SAHARA LABS',
+    name: 'Sahara Labs',
     legalName: 'SAHARA LABS',
     tagline: 'Lead generation × Automation × AI voice',
     description:

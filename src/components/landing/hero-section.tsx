@@ -23,7 +23,7 @@ export const HeroSection: FC = (): ReactNode => {
                 <div className='flex items-start justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground motion-safe:animate-in fade-in duration-1000 fill-mode-both delay-500'>
                     <p className='flex items-center gap-2.5 text-ink'>
                         <span aria-hidden='true' className='size-1.5 shrink-0 bg-azure-500' />
-                        Lead generation × Automation × AI voice
+                        Lead generation × Automation
                     </p>
                     <a
                         href='#outcomes'
